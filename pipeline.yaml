@@ -1,0 +1,90 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: webinar-docs-site-build
+spec:
+  description: >-
+    Pipeline to build the website and deploy it
+  params:
+    - name: git-url
+      type: string
+      description: URL to git repository
+      default: https://github.com/hupiper/webinar-sitegit
+    - name: git-revision
+      type: string
+      description: Git revision (e.g. tag/branch/sha) to checkout
+      default: main
+  workspaces:
+    - name: docs-code
+  tasks:
+    - name: git-clone
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      params:
+        - name: url
+          value: "$(params.git-url)"
+        - name: revision
+          value: "$(params.git-revision)"
+      workspaces:
+        - name: output
+          workspace: docs-code
+    - name: build
+      taskRef:
+        kind: ClusterTask
+        name: build-buildconfig
+      params:
+        - name: template-file-path
+          value: devops/build-config-template.yml
+        - name: pipeline-name
+          value: "$(params.pipeline-name)"
+        - name: build-name
+          value: docs-website
+        - name: process-args
+          value: >-
+            -p NAME=csa-docs-website
+            -p TAG="$(params.git-revision)"
+        - name: follow-build-args
+          value: >-
+            --from-dir="/workspace/source"
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: docs-code
+    - name: deploy
+      taskRef:
+        kind: ClusterTask
+        name: openshift-deploy-v1-1-0
+      params:
+        - name: cluster-id
+          value: "$(params.mpp-cluster-name)"
+        - name: template-file-path
+          value: devops/deploy-template.yml
+        - name: process-args
+          # yamllint disable rule:line-length
+          value: >-
+            -n $(params.tenant)--csa-docs-int
+            -p hostname=csa-docs.$(params.mpp-cluster-domain)
+            -p project=$(params.tenant)--csa-docs-int
+            -p image=images.paas.redhat.com/$(params.tenant)/csa-docs-website:$(params.git-revision)
+          # yamllint enable rule:line-length
+        - name: pipeline-name
+          value: $(params.pipeline-name)
+        - name: resource-kind
+          value: deployment
+        - name: resource-name
+          value: csa-docs-site
+        - name: resource-namespace
+          value: $(params.tenant)--csa-docs-int
+        - name: always-rollout
+          value: "true"
+        - name: timeout
+          value: 4m
+      runAfter:
+        - build
+      workspaces:
+        - name: source
+          workspace: docs-code
+
