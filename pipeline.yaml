@@ -10,7 +10,7 @@ spec:
     - name: git-url
       type: string
       description: URL to git repository
-      default: https://github.com/hupiper/webinar-sitegit
+      default: https://github.com/hupiper/webinar-site.git
     - name: git-revision
       type: string
       description: Git revision (e.g. tag/branch/sha) to checkout
@@ -36,11 +36,11 @@ spec:
         name: build-buildconfig
       params:
         - name: template-file-path
-          value: devops/build-config-template.yml
+          value: devops/build-config-template.yaml
         - name: pipeline-name
           value: "$(params.pipeline-name)"
         - name: build-name
-          value: docs-website
+          value: webinar-website
         - name: process-args
           value: >-
             -p NAME=webinar-website
@@ -58,26 +58,14 @@ spec:
         kind: ClusterTask
         name: openshift-deploy-v1-1-0
       params:
-        - name: cluster-id
-          value: "$(params.mpp-cluster-name)"
         - name: template-file-path
-          value: devops/deploy-template.yml
-        - name: process-args
-          # yamllint disable rule:line-length
-          value: >-
-            -n $(params.tenant)--csa-docs-int
-            -p hostname=csa-docs.$(params.mpp-cluster-domain)
-            -p project=$(params.tenant)--csa-docs-int
-            -p image=images.paas.redhat.com/$(params.tenant)/csa-docs-website:$(params.git-revision)
-          # yamllint enable rule:line-length
+          value: devops/deploy-template.yaml
         - name: pipeline-name
           value: $(params.pipeline-name)
         - name: resource-kind
           value: deployment
         - name: resource-name
-          value: csa-docs-site
-        - name: resource-namespace
-          value: $(params.tenant)--csa-docs-int
+          value: webinar-site
         - name: always-rollout
           value: "true"
         - name: timeout
