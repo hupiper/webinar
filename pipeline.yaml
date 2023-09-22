@@ -16,7 +16,7 @@ spec:
       description: Git revision (e.g. tag/branch/sha) to checkout
       default: main
   workspaces:
-    - name: docs-code
+    - name: webinar-code
   tasks:
     - name: git-clone
       taskRef:
@@ -29,7 +29,7 @@ spec:
           value: "$(params.git-revision)"
       workspaces:
         - name: output
-          workspace: docs-code
+          workspace: webinar-code
     - name: build
       taskRef:
         kind: ClusterTask
@@ -37,8 +37,6 @@ spec:
       params:
         - name: template-file-path
           value: devops/build-config-template.yaml
-        - name: pipeline-name
-          value: "$(params.pipeline-name)"
         - name: build-name
           value: webinar-website
         - name: process-args
@@ -52,7 +50,7 @@ spec:
         - git-clone
       workspaces:
         - name: source
-          workspace: docs-code
+          workspace: webinar-code
     - name: deploy
       taskRef:
         kind: ClusterTask
@@ -60,8 +58,6 @@ spec:
       params:
         - name: template-file-path
           value: devops/deploy-template.yaml
-        - name: pipeline-name
-          value: $(params.pipeline-name)
         - name: resource-kind
           value: deployment
         - name: resource-name
@@ -74,5 +70,5 @@ spec:
         - build
       workspaces:
         - name: source
-          workspace: docs-code
+          workspace: webinar-code
 
