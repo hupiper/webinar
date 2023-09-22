@@ -43,7 +43,7 @@ spec:
           value: docs-website
         - name: process-args
           value: >-
-            -p NAME=csa-docs-website
+            -p NAME=webinar-website
             -p TAG="$(params.git-revision)"
         - name: follow-build-args
           value: >-
